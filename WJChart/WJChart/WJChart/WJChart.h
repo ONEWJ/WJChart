@@ -18,20 +18,29 @@ typedef NS_ENUM(NSInteger, ChartType)
 };
 @protocol WJChartDataSourse <NSObject>
 @optional
--(NSString *)WJChart:(WJChart *)WJChart titleForValueAtIndex:(NSInteger)index;
--(NSArray *)XTitleInWJChart:(WJChart *)WJChart;
+-(NSString *)chart:(WJChart *)chart titleForValueAtIndex:(NSInteger)index;
+
+
+-(NSArray *)XTitleInWJChart:(WJChart *)chart;
+/**
+ *  每一块的比例值
+ *
+ *  @param chartView self
+ *
+ *  @return 比例值数组
+ */
+-(NSArray *)ValuesInWJChart:(WJChart *)chart;
 
 @end
 
 
 @protocol WJChartDelegate <NSObject>
 @optional
--(void)WJChart:(WJChart *)WJChart didSelectAtIndex:(int)index;
--(void)WJChart:(WJChart *)WJChart didEndDrawChartWithColors:(NSArray *)colors;
+-(void)chart:(WJChart *)chart didSelectAtIndex:(int)index;
+-(void)chart:(WJChart *)chart didEndDrawChartWithColors:(NSArray *)colors;
 @end
 @interface WJChart : UIView
 
-@property (nonatomic,strong) NSArray *Values;
 @property (nonatomic, weak)IBOutlet id<WJChartDataSourse> dataSource;
 @property (nonatomic, weak)IBOutlet id<WJChartDelegate> delegate;
 @property (nonatomic, assign, readonly) ChartType currentChartType;

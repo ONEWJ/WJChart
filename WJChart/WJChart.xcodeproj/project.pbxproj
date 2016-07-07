@@ -16,7 +16,6 @@
 		63C2D7161D2CABB900644628 /* WJChartTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C2D7151D2CABB900644628 /* WJChartTests.m */; };
 		63C2D7211D2CABB900644628 /* WJChartUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C2D7201D2CABB900644628 /* WJChartUITests.m */; };
 		63C2D7341D2CAC1200644628 /* WJChart.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C2D7331D2CAC1200644628 /* WJChart.m */; };
-		63C2D7371D2CACDD00644628 /* UIView+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C2D7361D2CACDD00644628 /* UIView+Extension.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,8 +54,6 @@
 		63C2D7221D2CABB900644628 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		63C2D7321D2CAC1200644628 /* WJChart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WJChart.h; sourceTree = "<group>"; };
 		63C2D7331D2CAC1200644628 /* WJChart.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WJChart.m; sourceTree = "<group>"; };
-		63C2D7351D2CACDD00644628 /* UIView+Extension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Extension.h"; sourceTree = "<group>"; };
-		63C2D7361D2CACDD00644628 /* UIView+Extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Extension.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,8 +147,6 @@
 		63C2D72E1D2CABF400644628 /* WJChart */ = {
 			isa = PBXGroup;
 			children = (
-				63C2D7351D2CACDD00644628 /* UIView+Extension.h */,
-				63C2D7361D2CACDD00644628 /* UIView+Extension.m */,
 				63C2D7321D2CAC1200644628 /* WJChart.h */,
 				63C2D7331D2CAC1200644628 /* WJChart.m */,
 			);
@@ -291,7 +286,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63C2D7371D2CACDD00644628 /* UIView+Extension.m in Sources */,
 				63C2D7341D2CAC1200644628 /* WJChart.m in Sources */,
 				63C2D7031D2CABB900644628 /* ViewController.m in Sources */,
 				63C2D7001D2CABB900644628 /* AppDelegate.m in Sources */,

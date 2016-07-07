@@ -7,7 +7,6 @@
 //
 
 #import "WJChart.h"
-#import "UIView+Extension.h"
 // 颜色
 #define WJColor(R, G, B) [UIColor colorWithRed:(R)/255.0 green:(G)/255.0 blue:(B)/255.0 alpha:1.0]
 
@@ -42,9 +41,8 @@
 }
 -(void)layoutSubviews{
     [super layoutSubviews];
-    //    NSLog(@"desc==%@--frame",self.desc.text);
-    self.colorView.frame=CGRectMake(0, 3, 20, self.Height-6);
-    self.desc.frame=CGRectMake(25, 0, [self.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width, self.Height);
+    self.colorView.frame=CGRectMake(0, 3, 20, self.frame.size.height-6);
+    self.desc.frame=CGRectMake(25, 0, [self.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width, self.frame.size.height);
     
 }
 @end
@@ -80,15 +78,13 @@
 @property(nonatomic,assign)NSUInteger colorCount;
 
 
+@property (nonatomic,strong) NSArray *Values;
+
+
 @end
 @implementation WJChart
 
--(void)setHideBottomDesc:(BOOL)hideBottomDesc{
-    _hideBottomDesc = hideBottomDesc;
-    
-    self.contentDescView.hidden = hideBottomDesc;
-    
-}
+#pragma mark - lazy
 -(UIScrollView *)contentDescView{
     if(_contentDescView==nil){
         UIScrollView *contentDescView=[[UIScrollView alloc]init];
@@ -113,16 +109,30 @@
     }
     return _chartFrame;
 }
+#pragma mark - set and get
+-(void)setHideBottomDesc:(BOOL)hideBottomDesc{
+    _hideBottomDesc = hideBottomDesc;
+    
+    self.contentDescView.hidden = hideBottomDesc;
+    
+}
 -(ChartType)currentChartType{
     return self.chartType;
 }
 -(UIColor *)currentSelectedColor{
     return self.selectedColor;
 }
+
+#pragma mark - drawMethod
 -(void)drawChartWithType:(ChartType )chartType{
     
     self.chartType=chartType;
     
+    if ([self.dataSource respondsToSelector:@selector(ValuesInWJChart:)]) {
+        
+        self.Values = [self.dataSource ValuesInWJChart:self];
+        
+    }
     
     [self setNeedsDisplay];
     
@@ -156,28 +166,6 @@
     }
     
 }
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
-    
-    UITouch *touch=[touches anyObject];
-    CGPoint point=[touch locationInView:self];
-    switch (self.chartType) {
-        case ChartTypePie:
-            [self touchPieWithPoint:point];
-            break;
-        case ChartTypeHorizon:
-            [self touchHorizontalViewWithPoint:point];
-            break;
-        case ChartTypeHeap:
-            [self touchHeapWithPoint:point];
-            break;
-        case ChartTypeLine:
-            [self touchLineWithPoint:point];
-            break;
-        default:
-            break;
-    }
-}
-
 /**
  折线图
  */
@@ -201,7 +189,7 @@
             Xcount=((NSArray *)Xtitle[0]).count;
         }
         self.colorCount=lineCount;
-        NSLog(@"lineCount=%zd,Xcount=%zd,topCount=%zd",lineCount,Xcount,topCount);
+//        NSLog(@"lineCount=%zd,Xcount=%zd,topCount=%zd",lineCount,Xcount,topCount);
         
         if(Xtitle.count==3){
             NSArray *top=Xtitle[0];
@@ -282,7 +270,6 @@
                 [self.chartFrame addObject:[NSValue valueWithCGRect:rect]];
                 
                 if(k%(lineCount*(Xcount/topCount))<lineCount){
-                    //                    NSLog(@"hahahaaha----%d",k);
                     
                     CGContextMoveToPoint(ctx, x, maxHeight-h);//起点
                     
@@ -300,8 +287,8 @@
                     CGContextStrokePath(ctx);
                 }
             }
-            if ([self.delegate respondsToSelector:@selector(WJChart:didEndDrawChartWithColors:)]) {
-                [self.delegate WJChart:self didEndDrawChartWithColors:self.colors];
+            if ([self.delegate respondsToSelector:@selector(chart:didEndDrawChartWithColors:)]) {
+                [self.delegate chart:self didEndDrawChartWithColors:self.colors];
             }
             if (!self.hideBottomDesc) {
                 [self addBottomDescInLineOrHeap];
@@ -313,34 +300,7 @@
     }
     
 }
-/**
- * 折线图or 堆叠图上的底部
- */
--(void)addBottomDescInLineOrHeap{
-    NSArray *Xtitle = [self.dataSource XTitleInWJChart:self];
-    //详细描述()
-    self.contentDescView.frame=CGRectMake(0, self.frame.size.height-contentDescViewH, self.frame.size.width, contentDescViewH);
-    CGFloat maxX=0;
-    NSArray *names=Xtitle[Xtitle.count-1];
-    for (int i=0; i<self.colors.count; i++) {
-        describeView *view=[[describeView alloc]init];
-        view.colorView.backgroundColor=self.colors[i];
-        view.desc.text=names[i];
-        view.desc.font=[UIFont systemFontOfSize:12];
-        view.X=maxX;
-        view.Y=20;
-        view.Height=20;
-        view.Width=[view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25;
-        maxX+=view.Width+10;
-        [self.contentDescView addSubview:view];
-        
-    }
-    self.contentDescView.contentSize=CGSizeMake(maxX, 20);
-    
-}
--(void)touchLineWithPoint:(CGPoint)point{
-    [self touchHeapWithPoint:point];
-}
+
 /**
  堆叠图
  */
@@ -434,8 +394,8 @@
                 [self.chartFrame addObject:[NSValue valueWithCGRect:CGRectMake(x, y, w, h)]];
             }
         }
-        if ([self.delegate respondsToSelector:@selector(WJChart:didEndDrawChartWithColors:)]) {
-            [self.delegate WJChart:self didEndDrawChartWithColors:self.colors];
+        if ([self.delegate respondsToSelector:@selector(chart:didEndDrawChartWithColors:)]) {
+            [self.delegate chart:self didEndDrawChartWithColors:self.colors];
         }
         
         if (!self.hideBottomDesc) {
@@ -446,31 +406,7 @@
     }
     
 }
--(void)touchHeapWithPoint:(CGPoint)point{
-    for (int i=0 ; i<self.chartFrame.count; i++) {
-        
-        if(CGRectContainsPoint([self.chartFrame[i] CGRectValue], point)){
-            
-            self.selectedColor = self.colors[i%self.colorCount];
-            
-            if([self.delegate respondsToSelector:@selector(WJChart:didSelectAtIndex:)]){
-                [self.delegate WJChart:self didSelectAtIndex:i];
-            }
-            CGRect rect = [self.chartFrame[i] CGRectValue];
-            if(self.coverRectView==nil){
-                UIView *coverRectView=[[UIView alloc]initWithFrame:CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4)];
-                self.coverRectView=coverRectView;
-                coverRectView.alpha=0.5;
-                coverRectView.backgroundColor=[UIColor whiteColor];
-                [self addSubview:coverRectView];
-                
-            }else{
-                self.coverRectView.frame=CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4);
-            }
-            break;
-        }
-    }
-}
+
 /**
  水平图
  */
@@ -491,9 +427,6 @@
             }
             tableCount*=(preCategory.count?preCategory.count:1);
             CGFloat oneDescH=(rect.size.height-contentDescViewH)/category.count/tableCount;
-            
-            //            NSLog(@"%d---%f",tableCount, oneDescH);
-            //            NSLog(@"%d---dddddd",category.count*tableCount);
             for (int j=0;j<category.count*tableCount;j++) {
                 NSString *name = category[j%category.count];
                 UILabel *nameLabel=[[UILabel alloc]initWithFrame:CGRectMake(i*oneDescW, j*oneDescH, oneDescW, oneDescH)];
@@ -510,7 +443,6 @@
             }
             
         }
-        //        NSLog(@"lastViewFrames=%@",lastViewFrames);
         
         //画图
         NSUInteger count = self.Values.count;
@@ -551,8 +483,8 @@
     }
     
     //详细描述
-    if ([self.delegate respondsToSelector:@selector(WJChart:didEndDrawChartWithColors:)]) {
-        [self.delegate WJChart:self didEndDrawChartWithColors:self.colors];
+    if ([self.delegate respondsToSelector:@selector(chart:didEndDrawChartWithColors:)]) {
+        [self.delegate chart:self didEndDrawChartWithColors:self.colors];
     }
     
     if (self.hideBottomDesc) {
@@ -564,44 +496,20 @@
     view.colorView.backgroundColor=[UIColor colorWithRed:0/255.0 green:100/255.0 blue:168/255.0 alpha:1];
     view.desc.text=@"病例数";
     view.desc.font=[UIFont systemFontOfSize:12];
-    view.X=0;
-    view.Y=20;
-    view.Height=20;
-    view.Width=[view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25;
+    
+    view.frame = CGRectMake(0, 20, [view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25, 20);
+    
     [self.contentDescView addSubview:view];
     self.contentDescView.contentSize=CGSizeMake(rect.size.width, contentDescViewH);
     
     
 }
--(void)touchHorizontalViewWithPoint:(CGPoint)point{
-    UIColor *color = [UIColor colorWithRed:0/255.0 green:100/255.0 blue:168/255.0 alpha:1];// 居然是空的
-    self.selectedColor = color ;
-    for (int i=0 ; i<self.chartFrame.count; i++) {
-        
-        if(CGRectContainsPoint([self.chartFrame[i] CGRectValue], point)){
-            if([self.delegate respondsToSelector:@selector(WJChart:didSelectAtIndex:)]){
-                [self.delegate WJChart:self didSelectAtIndex:i];
-            }
-            CGRect rect = [self.chartFrame[i] CGRectValue];
-            if(self.coverRectView==nil){
-                UIView *coverRectView=[[UIView alloc]initWithFrame:CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4)];
-                self.coverRectView=coverRectView;
-                coverRectView.alpha=0.5;
-                coverRectView.backgroundColor=[UIColor whiteColor];
-                [self addSubview:coverRectView];
-                
-            }else{
-                self.coverRectView.frame=CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4);
-            }
-            break;
-        }
-    }
-}
+
 /**
  饼图
  */
 -(void)drawPieInRect:(CGRect)rect{
-    //    self.Values = @[@18,@5,@1,@20,@40,@3,@7,@6];
+    
     for (int i=0; i<self.Values.count; i++) {
         [self.colors addObject:WJRandomColor];
     }
@@ -629,29 +537,26 @@
         CGContextAddPath(ctx, path.CGPath);
         CGContextFillPath(ctx);
     }
-    if ([self.delegate respondsToSelector:@selector(WJChart:didEndDrawChartWithColors:)]) {
-        [self.delegate WJChart:self didEndDrawChartWithColors:self.colors];
+    if ([self.delegate respondsToSelector:@selector(chart:didEndDrawChartWithColors:)]) {
+        [self.delegate chart:self didEndDrawChartWithColors:self.colors];
     }
     //详细描述()
     if (self.hideBottomDesc) {
         return;
     }
     
-    
     self.contentDescView.frame=CGRectMake(0, rect.size.height-contentDescViewH, rect.size.width, contentDescViewH);
     CGFloat maxX=0;
     for (int i=0; i<self.Values.count; i++) {
         describeView *view=[[describeView alloc]init];
         view.colorView.backgroundColor=self.colors[i];
-        if([self.dataSource respondsToSelector:@selector(WJChart:titleForValueAtIndex:)]){
-            view.desc.text=[self.dataSource WJChart:self titleForValueAtIndex:i];
+        if([self.dataSource respondsToSelector:@selector(chart:titleForValueAtIndex:)]){
+            view.desc.text=[self.dataSource chart:self titleForValueAtIndex:i];
         }
         view.desc.font=[UIFont systemFontOfSize:12];
-        view.X=maxX;
-        view.Y=20;
-        view.Height=20;
-        view.Width=[view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25;
-        maxX+=view.Width+10;
+        view.frame = CGRectMake(maxX, 20, [view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25, 20);
+        
+        maxX+=view.frame.size.width+10;
         
         [self.contentDescView addSubview:view];
     }
@@ -660,7 +565,81 @@
     
     
 }
+#pragma mark - touch Method
 
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    
+    UITouch *touch=[touches anyObject];
+    CGPoint point=[touch locationInView:self];
+    switch (self.chartType) {
+        case ChartTypePie:
+            [self touchPieWithPoint:point];
+            break;
+        case ChartTypeHorizon:
+            [self touchHorizontalViewWithPoint:point];
+            break;
+        case ChartTypeHeap:
+            [self touchHeapWithPoint:point];
+            break;
+        case ChartTypeLine:
+            [self touchLineWithPoint:point];
+            break;
+        default:
+            break;
+    }
+}
+-(void)touchLineWithPoint:(CGPoint)point{
+    [self touchHeapWithPoint:point];
+}
+-(void)touchHeapWithPoint:(CGPoint)point{
+    for (int i=0 ; i<self.chartFrame.count; i++) {
+        
+        if(CGRectContainsPoint([self.chartFrame[i] CGRectValue], point)){
+            
+            self.selectedColor = self.colors[i%self.colorCount];
+            
+            if([self.delegate respondsToSelector:@selector(chart:didSelectAtIndex:)]){
+                [self.delegate chart:self didSelectAtIndex:i];
+            }
+            CGRect rect = [self.chartFrame[i] CGRectValue];
+            if(self.coverRectView==nil){
+                UIView *coverRectView=[[UIView alloc]initWithFrame:CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4)];
+                self.coverRectView=coverRectView;
+                coverRectView.alpha=0.5;
+                coverRectView.backgroundColor=[UIColor whiteColor];
+                [self addSubview:coverRectView];
+                
+            }else{
+                self.coverRectView.frame=CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4);
+            }
+            break;
+        }
+    }
+}
+-(void)touchHorizontalViewWithPoint:(CGPoint)point{
+    UIColor *color = [UIColor colorWithRed:0/255.0 green:100/255.0 blue:168/255.0 alpha:1];// 居然是空的
+    self.selectedColor = color ;
+    for (int i=0 ; i<self.chartFrame.count; i++) {
+        
+        if(CGRectContainsPoint([self.chartFrame[i] CGRectValue], point)){
+            if([self.delegate respondsToSelector:@selector(chart:didSelectAtIndex:)]){
+                [self.delegate chart:self didSelectAtIndex:i];
+            }
+            CGRect rect = [self.chartFrame[i] CGRectValue];
+            if(self.coverRectView==nil){
+                UIView *coverRectView=[[UIView alloc]initWithFrame:CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4)];
+                self.coverRectView=coverRectView;
+                coverRectView.alpha=0.5;
+                coverRectView.backgroundColor=[UIColor whiteColor];
+                [self addSubview:coverRectView];
+                
+            }else{
+                self.coverRectView.frame=CGRectMake(rect.origin.x-3, rect.origin.y-2, rect.size.width+6, rect.size.height+4);
+            }
+            break;
+        }
+    }
+}
 -(void)touchPieWithPoint:(CGPoint)point{
     if([self distanceFromPointX:self.pieCenter toPointY:point]<self.pieRadius){
         
@@ -684,18 +663,18 @@
             
             if(angle<Angle){
                 self.selectedColor = self.colors[i];
-                if([self.delegate respondsToSelector:@selector(WJChart:didSelectAtIndex:)]){
-                    [self.delegate WJChart:self didSelectAtIndex:i];
+                if([self.delegate respondsToSelector:@selector(chart:didSelectAtIndex:)]){
+                    [self.delegate chart:self didSelectAtIndex:i];
                 }
                 if(self.coverPieImage==nil){
                     UIImageView *coverPieImage=[[UIImageView alloc]init];
                     self.coverPieImage=coverPieImage;
-                    coverPieImage.Size = CGSizeMake(self.pieRadius*2+10, self.pieRadius*2+10);
+                    coverPieImage.frame = (CGRect){0,0,{self.pieRadius*2+10, self.pieRadius*2+10}};
                     coverPieImage.center = self.pieCenter;
                     coverPieImage.backgroundColor=[UIColor clearColor];
                     [self addSubview:coverPieImage];
                 }
-                UIGraphicsBeginImageContextWithOptions(self.coverPieImage.Size, NO, 1);
+                UIGraphicsBeginImageContextWithOptions(self.coverPieImage.frame.size, NO, 1);
                 CGContextRef context=UIGraphicsGetCurrentContext();
                 double startA = 0;
                 double angle = 0;
@@ -720,6 +699,36 @@
     }
     
 }
+
+
+#pragma mark - other
+
+/**
+ * 折线图or 堆叠图上的底部
+ */
+-(void)addBottomDescInLineOrHeap{
+    
+    NSArray *Xtitle = [self.dataSource XTitleInWJChart:self];
+    //详细描述()
+    self.contentDescView.frame=CGRectMake(0, self.frame.size.height-contentDescViewH, self.frame.size.width, contentDescViewH);
+    CGFloat maxX=0;
+    NSArray *names=Xtitle[Xtitle.count-1];
+    for (int i=0; i<self.colors.count; i++) {
+        describeView *view=[[describeView alloc]init];
+        view.colorView.backgroundColor=self.colors[i];
+        view.desc.text=names[i];
+        view.desc.font=[UIFont systemFontOfSize:12];
+        view.frame = CGRectMake(maxX, 20, [view.desc.text sizeWithAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:12]}].width+25, 20);
+        
+        
+        maxX+=view.frame.size.width+10;
+        [self.contentDescView addSubview:view];
+        
+    }
+    self.contentDescView.contentSize=CGSizeMake(maxX, 20);
+    
+}
+
 -(float)distanceFromPointX:(CGPoint)start toPointY:(CGPoint)end{
     float distance;
     
